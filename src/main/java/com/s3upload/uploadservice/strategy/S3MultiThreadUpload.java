@@ -14,10 +14,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class S3MultiThreadUpload implements S3Upload {
@@ -57,7 +57,7 @@ public class S3MultiThreadUpload implements S3Upload {
             List<UploadPartCallable> callables = uploadRequests
                     .stream()
                     .map(uploadRequest -> new UploadPartCallable(s3Config, uploadRequest))
-                    .collect(Collectors.toList());
+                    .collect(toList());
 
             List<Future<UploadPartResult>> uploadResults = s3Config.executorService().invokeAll(callables);
 
@@ -86,14 +86,15 @@ public class S3MultiThreadUpload implements S3Upload {
     }
 
     private List<PartETag> getParts(List<Future<UploadPartResult>> uploadResults) {
-        List<PartETag> partETags = new ArrayList<>();
-        for (Future<UploadPartResult> future: uploadResults) {
-            try {
-                partETags.add(future.get().getPartETag());
-            }catch (Exception ex){
-                throw new RuntimeException("Error on get parts");
-            }
-        }
-        return partETags;
+        return uploadResults
+            .stream()
+            .map(uploadResult -> {
+                try {
+                    return uploadResult.get().getPartETag();
+                }catch (Exception ex){
+                    throw new RuntimeException("Error on get parts");
+                }
+            })
+            .collect(toList());
     }
 }
