@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  servlet:
+    multipart:
+      max-file-size: 5120MB #5GB
+      max-request-size: 5120MB #5GB
+
+aws:
+  region: ${ENV_REGION}
+  credentials:
+    accessKey: ${ENV_ACCESS_KEY}
+    secretKey: ${ENV_SECRET_KEY}
+  s3:
+    bucketName: ${ENV_BUCKET_NAME}
+    accelerateMode: ${ENV_ACCELERATE_MODE:true}
+    retries: ${ENV_RETRIES:5}
+    timeout: 3_600_000
+    multiThread:
+      threads: 10
+      partSize: 10 #MB
